@@ -1,4 +1,43 @@
+import { useForm } from 'react-hook-form'
+import Error from './Error'
+import { DraftPatient } from '../types'
+import { usePatientStore } from '../store/store'
+import { useEffect } from 'react'
+import {toast} from 'react-toastify'
+
+
 export default function PatientForm() {
+    
+    const addPatient = usePatientStore(state => state.addPatient) 
+    const activeId = usePatientStore(state => state.activeId) 
+    const patients = usePatientStore(state => state.patients) 
+    const updatePatient = usePatientStore(state => state.updatePatient) 
+    const {register, handleSubmit, setValue,formState: {errors}, reset} = useForm<DraftPatient>()
+
+    useEffect(() => {
+        if(activeId){
+            const activePatient = patients.filter(patient => patient.id === activeId)[0]
+            setValue('name', activePatient.name)
+            setValue('caretaker', activePatient.caretaker)
+            setValue('email', activePatient.email)
+            setValue('date', activePatient.date)
+            setValue('symptoms', activePatient.symptoms)
+        }
+    }, [activeId])
+
+    const registerPatient = (data : DraftPatient) => {
+        if(activeId){
+            updatePatient(data)
+            toast.success('Paciente actualizado correctamente')
+        }else{
+            addPatient(data)
+            toast.success('Paciente registrado correctamente')
+        }
+
+
+
+        reset()
+    }
 
     return (
         <div className="md:w-1/2 lg:w-2/5 mx-5">
@@ -12,6 +51,7 @@ export default function PatientForm() {
             <form 
                 className="bg-white shadow-md rounded-lg py-10 px-5 mb-10"
                 noValidate
+                onSubmit={handleSubmit(registerPatient)}
             >
                 <div className="mb-5">
                     <label htmlFor="name" className="text-sm uppercase font-bold">
@@ -22,7 +62,13 @@ export default function PatientForm() {
                         className="w-full p-3  border border-gray-100"  
                         type="text" 
                         placeholder="Nombre del Paciente" 
+                        {...register('name', {
+                            required: 'El nombre es obligatorio',
+                        })}
                     />
+                    {errors.name && (
+                        <Error> {errors.name?.message}</Error>
+                    )}
                 </div>
 
                 <div className="mb-5">
@@ -34,7 +80,13 @@ export default function PatientForm() {
                         className="w-full p-3  border border-gray-100"  
                         type="text" 
                         placeholder="Nombre del Propietario" 
+                        {...register('caretaker', {
+                            required: 'El propietario es obligatorio',
+                        })}
                     />
+                    {errors.caretaker && (
+                        <Error> {errors.caretaker?.message}</Error>
+                    )}
                 </div>
 
                 <div className="mb-5">
@@ -45,8 +97,18 @@ export default function PatientForm() {
                     id="email"
                     className="w-full p-3  border border-gray-100"  
                     type="email" 
-                    placeholder="Email de Registro" 
+                    placeholder="Email de Registro"
+                    {...register("email", {
+                        required: "El Email es Obligatorio",
+                        pattern: {
+                            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                            message: 'Email No Válido'
+                        }
+                        })}  
                 />
+                    {errors.email && (
+                        <Error> {errors.email?.message}</Error>
+                    )}
                 </div>
 
                 <div className="mb-5">
@@ -57,7 +119,13 @@ export default function PatientForm() {
                         id="date"
                         className="w-full p-3  border border-gray-100"  
                         type="date" 
+                        {...register('date', {
+                            required: 'La fecha de alta es obligatorio',
+                        })}
                     />
+                    {errors.date && (
+                        <Error> {errors.date?.message}</Error>
+                    )}
                 </div>
 
                 <div className="mb-5">
@@ -68,7 +136,13 @@ export default function PatientForm() {
                         id="symptoms"
                         className="w-full p-3  border border-gray-100"  
                         placeholder="Síntomas del paciente" 
-                    ></textarea>
+                        {...register('symptoms', {
+                            required: 'Los sintomas son obligatorios',
+                        })}
+                    />
+                    {errors.symptoms && (
+                        <Error> {errors.symptoms?.message}</Error>
+                    )}
                 </div>
 
                 <input
